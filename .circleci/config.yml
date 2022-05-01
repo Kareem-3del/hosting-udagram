@@ -1,49 +1,43 @@
-version: 2.1
+version: "2.1"
 orbs:
-  # orgs contain basc recipes and reproducible actions (install node, aws, etc.)
-  node: circleci/node@4.1.0
-  aws-cli: circleci/aws-cli@2.0.3
-  aws-elastic-beanstalk: circleci/aws-elastic-beanstalk@2.0.0
-  # different jobs are calles later in the workflows sections
+  node: circleci/node@5.0.0
+  aws-cli: circleci/aws-cli@2.0.6
+  eb: circleci/aws-elastic-beanstalk@2.0.1
 jobs:
-  build:
+  build_deploy:
     docker:
-      # the base image can run most needed actions with orbs
       - image: "cimg/base:stable"
+    working_directory: ~/app
     steps:
       - node/install:
-          node-version: 12.22.1
+          install-yarn: true
+          node-version: "16.13"
       - checkout
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          aws-region: AWS_DEFAULT_REGION
-          profile-name: AWS_PROFILE
-      - aws-elastic-beanstalk/setup
-      # install dependencies in both apps
+      - aws-cli/setup
+      - eb/setup
       - run:
-          name: Front-End install
-          command: |
-            npm run frontend:install
+          name: Installing front-end dependencies
+          command: yarn frontend:install
       - run:
-          name: Back-End install
-          command: |
-            npm run backend:install
-      # Build front and back end apps
+          name: Building front-end
+          command: yarn frontend:build
       - run:
-          name: Front-End Build
-          command: |
-            npm run frontend:build
+          name: Deploying front-end
+          command: yarn frontend:deploy
       - run:
-          name: Back-End Build
-          command: |
-            npm run backend:build
-      # Deploy front and back end apps
+          name: Installing back-end dependencies
+          command: yarn backend:install
       - run:
-          name: Back-End deploy
-          command: |
-            npm run backend:deploy
+          name: Building back-end
+          command: yarn backend:build
       - run:
-          name: Front-End deploy
-          command: |
-            npm run frontend:deploy
+          name: Deploying back-end
+          command: yarn backend:deploy
+
+workflows:
+  execute_bulk:
+    jobs:
+      - build_deploy:
+          filters:
+            branches:
+              only: main
