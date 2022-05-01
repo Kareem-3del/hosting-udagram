@@ -1,55 +1,47 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.7.0
-  aws-cli: circleci/aws-cli@2.0.3
-  eb: circleci/aws-elastic-beanstalk@2.0.1
+  node: circleci/node@4.2.0
+  aws-cli: circleci/aws-cli@2.0.0
+  aws-elastic-beanstalk: circleci/aws-elastic-beanstalk@2.0.1
 jobs:
-  udagram-api:
-    docker:
-      - image: "cimg/base:stable"
+  frontend:
+    working_directory: ~/app/udagram-frontend
+    executor: node/default
     steps:
-      - node/install:
-          # a node version that work with the udagram-api
-          node-version: 12.22.5
-          npm-version: 6.14.8
-      - checkout
-      - eb/setup
+      - checkout:
+          path: ~/app
+      - node/install-packages:
+          app-dir: ~/app/udagram-frontend
       - run:
-          # install npm dependencies and building the app
-          name: build server
-          command: |
-            npm run install:server
-            npm run build:server
+          name: Build Frontend
+          command: npm run build
+      - aws-cli/install
       - run:
-          name: Elastic Beanstalk Server
-          # deploy the app with environment variables
-          command: |
-            cd udagram-api/www
-            eb init --region us-east-1 --platform node.js-12 udagram-api
-            eb use Udagramapi-env
-            eb setenv AWS_BUCKET=$AWS_BUCKET AWS_ACCESS_KEY=$AWS_ACCESS_KEY AWS_REGION=$AWS_REGION AWS_SECRET=$AWS_SECRET JWT_SECRET=$JWT_SECRET POSTGRES_DB=$POSTGRES_DB POSTGRES_HOST=$POSTGRES_HOST POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_USERNAME=$POSTGRES_USERNAME 
-            eb deploy
-            cd ..
-  udagram-frontend:
-    docker:
-      - image: "cimg/base:stable"
+          name: Deploy Frontend
+          command: aws s3 cp --recursive --acl public-read ./www $S3_BUCKET_FRONTEND
+  server:
+    working_directory: ~/app/udagram-api
+    executor: node/default
     steps:
-      - node/install # install npm
-      - checkout #checkout the code
-      - aws-cli/install #install aws cli
+      - checkout:
+          path: ~/app
+      - node/install-packages:
+          app-dir: ~/app/udagram-api
       - run:
-          name: build frontend
-          command: |
-            npm run install:frontend
-            npm run build:frontend
+          name: Build and Archive Server
+          command: |-
+            npm run build
+            printenv > www/.env
+            npm run archive
+      - aws-cli/install
       - run:
-          name: deploy frontend
-          # copy the files that was build from angular build command and copy them to s3 that has static web hosting enabled
-          command: |
-            aws s3 cp --recursive --acl public-read ./udagram-frontend/www s3://udagram-front
-
+          name: Deploy Server
+          command: |-
+            aws s3 cp ./www/Archive.zip $EB_BUCKET
+            aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket="$EB_BUCKET",S3Key="Archive.zip"
+            aws elasticbeanstalk update-environment --application-name $EB_APP  --version-label <<pipeline.git.revision>>
 workflows:
   build_and_deploy:
     jobs:
-      - udagram-api
-      - udagram-frontend
+      - frontend
+      - server
