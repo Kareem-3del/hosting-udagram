@@ -37,9 +37,15 @@ jobs:
       - run:
           name: Deploy Server
           command: |-
-            aws s3 cp ./www/Archive.zip  $EB_BUCKET/deploy.zip --region us-east-1 --acl public-read --content-type application/zip --cache-control max-age=604800 --metadata-directive REPLACE
-            aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET,S3Key=deploy.zip  --region us-east-1 --process --description "Deployed by CircleCI"
-            aws elasticbeanstalk update-environment --application-name $EB_APP  --version-label <<pipeline.git.revision>>
+            aws s3 cp --recursive --acl public-read ./www/ $EB_BUCKET
+            aws s3 cp --acl public-read ./www/Archive.zip $EB_BUCKET
+            aws elasticbeanstalk create-application-version --application-name $EB_APP_NAME --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET,S3Key=Archive.zip --region $AWS_REGION 
+            aws elasticbeanstalk update-environment --application-name $EB_APP --version-label <<pipeline.git.revision>>   
+
+          #command: |-
+          #  aws s3 cp ./www/Archive.zip  $EB_BUCKET/deploy.zip --region us-east-1 --acl public-read --content-type application/zip --cache-control max-age=604800 --metadata-directive REPLACE
+          #  aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET,S3Key=deploy.zip  --region us-east-1 --process --description "Deployed by CircleCI"
+          #  aws elasticbeanstalk update-environment --application-name $EB_APP  --version-label <<pipeline.git.revision>>
 workflows:
   build_and_deploy:
     jobs:
