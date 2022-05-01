@@ -33,6 +33,11 @@ jobs:
             npm run build
             printenv > www/.env
             npm run archive
+
+      - aws-elastic-beanstalk
+      - run:
+          - name: Deploy Server Elastic Beanstalk
+          - command: eb deploy $EB_APP
       - aws-cli/install
       - run:
           name: Deploy Server
