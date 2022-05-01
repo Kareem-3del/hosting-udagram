@@ -38,11 +38,11 @@ jobs:
           name: Deploy Server
           command: |-
             aws s3 cp ./www/Archive.zip  $EB_BUCKET/deploy.zip --region us-east-1 --acl public-read --content-type application/zip --cache-control max-age=604800 --metadata-directive REPLACE
-            aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET/deploy.zip,S3Key=deploy.zip  --region us-east-1 --process --description "Deployed by CircleCI"
+            aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET,S3Key=deploy.zip  --region us-east-1 --process --description "Deployed by CircleCI"
             aws elasticbeanstalk update-environment --application-name $EB_APP  --version-label <<pipeline.git.revision>>
 workflows:
   build_and_deploy:
     jobs:
-      - frontend
+   #   - frontend
       - server
 
