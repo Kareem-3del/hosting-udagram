@@ -1,43 +1,55 @@
-version: "2.1"
+version: 2.1
 orbs:
-  node: circleci/node@5.0.0
-  aws-cli: circleci/aws-cli@2.0.6
+  node: circleci/node@4.7.0
+  aws-cli: circleci/aws-cli@2.0.3
   eb: circleci/aws-elastic-beanstalk@2.0.1
 jobs:
-  build_deploy:
+  udagram-api:
     docker:
       - image: "cimg/base:stable"
-    working_directory: ~/app
     steps:
       - node/install:
-          install-yarn: true
-          node-version: "16.13"
+          # a node version that work with the udagram-api
+          node-version: 12.22.5
+          npm-version: 6.14.8
       - checkout
-      - aws-cli/setup
       - eb/setup
       - run:
-          name: Installing front-end dependencies
-          command: yarn frontend:install
+          # install npm dependencies and building the app
+          name: build server
+          command: |
+            npm run install:server
+            npm run build:server
       - run:
-          name: Building front-end
-          command: yarn frontend:build
+          name: Elastic Beanstalk Server
+          # deploy the app with environment variables
+          command: |
+            cd udagram-api/www
+            eb init --region us-east-1 --platform node.js-12 udagram-api
+            eb use Udagramapi-env
+            eb setenv AWS_BUCKET=$AWS_BUCKET AWS_ACCESS_KEY=$AWS_ACCESS_KEY AWS_REGION=$AWS_REGION AWS_SECRET=$AWS_SECRET JWT_SECRET=$JWT_SECRET POSTGRES_DB=$POSTGRES_DB POSTGRES_HOST=$POSTGRES_HOST POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_USERNAME=$POSTGRES_USERNAME 
+            eb deploy
+            cd ..
+  udagram-frontend:
+    docker:
+      - image: "cimg/base:stable"
+    steps:
+      - node/install # install npm
+      - checkout #checkout the code
+      - aws-cli/install #install aws cli
       - run:
-          name: Deploying front-end
-          command: yarn frontend:deploy
+          name: build frontend
+          command: |
+            npm run install:frontend
+            npm run build:frontend
       - run:
-          name: Installing back-end dependencies
-          command: yarn backend:install
-      - run:
-          name: Building back-end
-          command: yarn backend:build
-      - run:
-          name: Deploying back-end
-          command: yarn backend:deploy
+          name: deploy frontend
+          # copy the files that was build from angular build command and copy them to s3 that has static web hosting enabled
+          command: |
+            aws s3 cp --recursive --acl public-read ./udagram-frontend/www s3://udagram-front
 
 workflows:
-  execute_bulk:
+  build_and_deploy:
     jobs:
-      - build_deploy:
-          filters:
-            branches:
-              only: main
+      - udagram-api
+      - udagram-frontend
