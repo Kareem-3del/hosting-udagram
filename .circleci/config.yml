@@ -25,9 +25,6 @@ jobs:
     steps:
       - checkout:
           path: ~/app
-      - shell:
-          name: SEE DATA
-          command: ls ~/app/udagram-api
       - node/install-packages:
           app-dir: ~/app/udagram-api
       - run:
