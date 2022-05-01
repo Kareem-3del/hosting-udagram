@@ -1,1 +1,3 @@
 node_modules
+/udagram-api/node_modules/
+/udagram-api/.env
