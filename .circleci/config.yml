@@ -37,9 +37,9 @@ jobs:
       - run:
           name: Deploy Server
           command: |-
-            aws s3 cp --acl public-read ./www/Archive.zip $EB_BUCKET
-            aws elasticbeanstalk create-application-version --application-name $EB_APP --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$EB_BUCKET,S3Key=Archive.zip --region us-east-1
-            aws elasticbeanstalk update-environment --application-name $EB_APP --version-label <<pipeline.git.revision>>  --region $AWS_REGION
+            aws s3 cp --acl public-read ./www/Archive.zip $S3_BUCKET_SERVER
+            aws elasticbeanstalk create-application-version --application-name $EB_APP_NAME --version-label <<pipeline.git.revision>> --source-bundle S3Bucket=$S3_BUCKET_SERVER,S3Key=www.zip
+            aws elasticbeanstalk update-environment --application-name $EB_APP --version-label <<pipeline.git.revision>> 
 
           #command: |-
           #  aws s3 cp ./www/Archive.zip  $EB_BUCKET/deploy.zip --region us-east-1 --acl public-read --content-type application/zip --cache-control max-age=604800 --metadata-directive REPLACE
