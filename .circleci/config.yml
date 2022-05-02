@@ -48,6 +48,6 @@ jobs:
 workflows:
   build_and_deploy:
     jobs:
-   #   - frontend
+      - frontend
       - server
 
