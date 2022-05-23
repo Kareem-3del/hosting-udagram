@@ -15,19 +15,19 @@ jobs:
       - node/install: 
           node-version: 14.19.0
       - run:
-          name: npm i ( install pakage dependencies)
+          name: Installing Dependencies .....
           command: npm run install 
       - run:
-          name: build tha udagram frontend and backend 
+          name: Build tha App frontend and backend (API)
           command: npm run build
       - run:
-          name: run test backend and frontends
+          name: Run test Backend and Frontends
           command: npm run test 
       - run:
-          name: set environment for eb host 
+          name: Set environment for EB 
           command: cd udagram-api && eb use udagram-api-dev && eb setenv PORT=$PORT POSTGRES_USERNAME=$POSTGRES_USERNAME POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_DB=$POSTGRES_PORT DB_PORT=$DB_PORT POSTGRES_HOST=$POSTGRES_HOST URL=$URL JWT_SECRET=$JWT_SECRET
       - run:
-          name: deploy backend (host eb ) then deploy frontend on s3 
+          name: Deploy backend & Deploy Frontend on S3
           command: npm run deploy 
 workflows:
   build: 

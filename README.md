@@ -1,4 +1,17 @@
-# Udagram
+# WEB-APP
+<a href="http://front-end-udigram.s3-website-us-east-1.amazonaws.com/home">FRONT-END</a>
+<br/>
+<a href="http://udagram-api.us-east-1.elasticbeanstalk.com/">BACK-END (API)</a>
+<hr/>
+
+# DATABASE
+<a href="https://www.postgresql.org/">PostgreSQL</a>
+<br/>
+ENDPOINT :``database-1.ca3fghmphcnj.us-east-1.rds.amazonaws.com``
+<br/>
+PORT : ``5432``
+<br/>
+<hr/>
 
 This application is provided to you as an alternative starter project if you do not wish to host your own code done in the previous courses of this nanodegree. The udagram application is a fairly simple application that includes all the major components of a Full-Stack web application.
 
