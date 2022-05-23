@@ -1,0 +1,39 @@
+version: 2.1 
+
+orbs: 
+  node : circleci/node@5.0.0
+  eb: circleci/aws-elastic-beanstalk@2.0.1
+  aws-cli: circleci/aws-cli@2.1.0
+jobs:
+  build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - aws-cli/setup
+      - eb/setup
+      - node/install: 
+          node-version: 14.19.0
+      - run:
+          name: npm i ( install pakage dependencies)
+          command: npm run install 
+      - run:
+          name: build tha udagram frontend and backend 
+          command: npm run build
+      - run:
+          name: run test backend and frontends
+          command: npm run test 
+      - run:
+          name: set environment for eb host 
+          command: cd udagram-api && eb use udagram-api-dev && eb setenv PORT=$PORT POSTGRES_USERNAME=$POSTGRES_USERNAME POSTGRES_PASSWORD=$POSTGRES_PASSWORD POSTGRES_DB=$POSTGRES_DB DB_PORT=$DB_PORT POSTGRES_HOST=$POSTGRES_HOST URL=$URL JWT_SECRET=$JWT_SECRET
+      - run:
+          name: deploy backend (host eb ) then deploy frontend on s3 
+          command: npm run deploy 
+workflows:
+  build: 
+    jobs:
+      - build:
+        filters:
+          branches:
+            only: 
+              - main
